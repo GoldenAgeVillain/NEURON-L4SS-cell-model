@@ -1,0 +1,66 @@
+// 
+//	Creates distributed background activity
+//
+// 	Inspired by Waters and Helmchen, J Neurosci 2006
+//
+//	Courtesy of Arnd Roth 
+// 	Modified by: 				Renaud Jolivet
+// 	Last modification:			2014.09.11
+// 		 
+
+dendarea 		= 0
+forsec cell.dends for(x, 0) dendarea += area(x)
+
+dendsegments 	= 0
+forsec cell.dends for(x, 0) dendsegments += 1
+
+objectvar 	exnetstim[dendsegments], exsyn[dendsegments], exnetcon[dendsegments]
+objectvar 	innetstim[dendsegments], insyn[dendsegments], innetcon[dendsegments]
+create 		excells[dendsegments], incells[dendsegments] // dummy compartments
+
+// parameters
+Ne 				= 2600	    // number of excitatory cells
+fe 				= 0.33		// frequency within the excitatory population (Hz)
+Ni 				= Ne/5		// number of inhibitory cells
+fi 				= 0.067 	// frequency within the inhibitory population (Hz)
+i 				= 0
+	
+forsec cell.dends for(x, 0) {
+
+	excells[i] exnetstim[i] = new NetStim(0.5)
+	exnetstim[i].interval 	= 1000/(Ne*fe) // ms
+	exnetstim[i].interval 	= 1000/(Ne*fe)*dendarea/area(x)
+	exnetstim[i].number 	= 100*tstop/exnetstim[i].interval
+	exnetstim[i].start 		= 0
+	exnetstim[i].noise 		= 1
+	exnetstim[i].seed(rngseed + i)
+
+	exsyn[i]                = new Exp2Syn(x)
+	exsyn[i].tau1 			= 0.3
+	exsyn[i].tau2 			= 1.7
+	exsyn[i].e 				= 0
+
+	exnetcon[i]             = new NetCon(exnetstim[i], exsyn[i], 0.5, 0, ge)
+		
+	incells[i] innetstim[i] = new NetStim(0.5)
+	innetstim[i].interval 	= 1000/(Ni*fi) // ms
+	innetstim[i].interval 	= 1000/(Ni*fi)*dendarea/area(x)
+	innetstim[i].number 	= 100*tstop/innetstim[i].interval
+	innetstim[i].start 		= 0
+	innetstim[i].noise 		= 1
+	innetstim[i].seed(rngseed + i)
+
+	insyn[i]                = new Exp2Syn(x)
+	insyn[i].tau1 			= 1.0
+	insyn[i].tau2 			= 10.0
+	insyn[i].e 				= -75
+
+	innetcon[i]             = new NetCon(innetstim[i], insyn[i], 0.5, 0, gi)
+
+	i += 1
+}
+
+Nsyne = dendsegments
+NE2S  = dendsegments
+Nsyni = dendsegments
+access cell.soma

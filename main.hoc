@@ -1,0 +1,351 @@
+// 
+//	L4 spiny stellate neuron simulations
+//
+//	Adapted from Lavzin et al., Nature 2012
+//
+//	Downloaded from ModelDB:	2014.07.22
+// 	Modified by: 				Renaud Jolivet
+// 	Last modification:			2014.09.12
+// 				
+
+// definitions
+strdef 		seedasastring, gainasastring, myloc, fname, prefix
+objectvar 	outfile	
+objref 		gains, pc
+outfile 		= new File()
+gains 			= new Vector()	
+pc 				= new ParallelContext()
+switch_plot     = 1
+switch_print    = 1     
+switch_soma     = 1
+ge              = 0.002 // µS
+gi              = 0.0005 // µS
+prefix          = "std"
+if ( gi == 0 ) { prefix = "woinh" }
+if ( switch_soma == 1 ) { 
+    prefix  = "clustered_spec" 
+    gi      = 0
+}
+
+//
+// 	Parameters that control the simulation are:
+//		1. The seed of the RNG that controls the background noise;
+//		2. The location of the thalamocortical synapse;
+//		3. The amplification gain factor.
+//	(see runSimulations.hoc)
+//	 
+rngseed 		= 1291				                        // 1. Seed of the RNG
+myloc 			= "a3_122"			                        // 2. Dendrite where to place the thalamocortical synapse
+gains.append(0)//, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 6, 9, 12)    // 3. List of gains to be tested	
+    
+// permutation of the gains
+if (name_declared("zzz")==5) {
+	if (zzz<gains.size()) {
+        for ii = 1, zzz {
+		    gains.insrt(0,gains.x[gains.size()-1])
+		    gains.remove(gains.size()-1)	
+	    }
+    } else {
+	    rngseed = rngseed+zzz
+	}
+}	
+
+// init
+load_file("nrngui.hoc")
+vinit			= -70
+dt				= 0.025 
+steps_per_ms 	= 10
+tstart 			= 0
+tstop 			= 5000//130000
+
+// load cell morphology
+load_file("l4sscell.hoc")
+		
+// define conductances
+taus_hh3 		= 30
+tausv_hh3		= 10
+tausn_hh3		= 5
+tausb_hh3		= 0.1
+taun_hh3		= 2
+taun2_hh3		= 40
+tauh_hh3		= 1
+    
+soma_na			= 0.300
+soma_k1			= 0.030
+soma_k2 		= 0.100
+dend_na			= 0.003
+dend_k1			= 0.001
+dend_k2			= 0.001
+cabar			= 0.000003
+					
+// create cell
+objref cell
+cell 			= new l4(0,0)
+    
+// procedures to set segments and distribute channels
+proc geom_nseg() {
+	forall { nseg = int((L/(0.1*lambda_f(100))+.999)/2)*2+1 }
+}				
+geom_nseg()
+proc init_active() {
+    access cell.soma
+	insert hh3
+    insert cah
+    insert cad
+	vshift_hh3 	= -10
+	gnabar_hh3 	= soma_na
+	gkbar_hh3 	= soma_k1
+	gkbar2_hh3	= soma_k2
+	gl_hh3		= 0
+	gbar_cah	= cabar    
+    ena         = 70    
+    v			= vinit 
+	forsec cell.all{
+	    insert hh3
+		insert cad
+		insert cah
+		vshift_hh3	= -10
+        gnabar_hh3	= dend_na
+		gkbar_hh3	= dend_k1
+		gkbar2_hh3	= dend_k2
+		gl_hh3		= 0
+		gbar_cah	= cabar
+        ena         = 70   
+        v			= vinit 
+	}
+}
+init_active()
+cell.soma distance()                                    // set cell.soma(0) as the origin for distance measurements
+		
+// record voltage at the soma
+objref savevec
+savevec			= new Vector()
+savevec.record(&cell.soma.v(.5))
+	
+// procedure to read currents
+objref vec_sodium, vec_calcium, vec_ex
+itot_na 		= 0
+itot_ca 		= 0
+itot_ex			= 0
+vec_sodium		= new Vector()
+vec_calcium		= new Vector()
+vec_ex			= new Vector()
+vec_sodium.record(&itot_na)
+vec_calcium.record(&itot_ca)
+vec_ex.record(&itot_ex)
+proc read_compartment_currents() {
+    if (ismembrane("na_ion")) { 
+		ina_comp 	= ina($1)*1e-2*area($1) 
+		itot_na 	= itot_na+ina_comp
+    }
+    if (ismembrane("ca_ion")) { 
+		ica_comp 	= ica($1)*1e-2*area($1) 
+		itot_ca 	= itot_ca+ica_comp
+    }
+}
+		
+// AP count
+objectvar myapc, stvector
+stvector 		= new Vector()
+myapc 			= new APCount(0.5)
+myapc.thresh	= -30
+myapc.record(stvector)
+	
+// create graph to display the voltage at the soma
+objref g, pwm
+pwm 			= new PWManager()	                    // to manage windows
+if (switch_plot == 1) {  
+    g 			= new Graph()	      
+    addplot(g,0)                                        // add 'g' to the list of stuff updated at each iteration
+    g.addvar("cell.soma.v(.5)",2,1)                     // add the somatic voltage to 'g', color index 2 (red), brush index 1 (line width 1)
+    g.size(0,tstop,-80,80)                              // adjust the scale of the 'g'
+}
+	
+// load external spike train
+objref inputFile, inputSpikeTrain
+inputFile	 	= new File()
+inputSpikeTrain = new Vector() 
+inputFile.ropen("input/inputSpikeTrain.txt")
+inputSpikeTrain.scanf(inputFile)
+inputFile.close()
+		
+// create the extra synapse
+objectvar   mysyn, mystim, mycon
+objref      vec_msi, vec_msv
+strdef      distlbl, cmd
+create      myTRC									    // Thalamic Relay Cell (dummy compartment)
+vec_msi			= new Vector()
+vec_msv			= new Vector()    
+myTRC mystim	= new NetStim(0.5)						
+mystim.number 	= 0										// ensure that the synapse is not spontaneously activated
+sprint(cmd,"access cell.%s",myloc)
+execute1(cmd)
+mysyn 			= new Exp2Syn(0.5)
+mysyn.tau1 		= 0.3
+mysyn.tau2 		= 1.7
+mysyn.e 		= 0
+vec_msi.record(&mysyn.i)                                // record the synaptic current at the thalamocortical synapse
+sprint(cmd,"vec_msv.record(&cell.%s.v(.5))",myloc)      
+execute1(cmd)                                           // record the voltage in the corresponding compartment
+mycon 			= new NetCon(mystim, mysyn, 1, 0, 1)	// connect the TRC to the synapse (dummy weight)
+mydist			= distance(0.5)
+sprint(distlbl,"distance to soma %-4.1f um",mydist)     // create label to print the distance on the shape plot
+
+// handlers
+proc InitializeInputs(){
+	for ii = 0, inputSpikeTrain.size()-1 {
+		mycon.event(inputSpikeTrain.x[ii])
+	}
+}	
+objref fih
+fih = new FInitializeHandler(1,"InitializeInputs()")    // create series of events to trigger the thalamocortical synapse
+
+// display the shape and extra synapse
+objref shape
+shape = new Shape(0)
+shape.view(-200, -200, 400, 400, 900, 200, 300.48, 300.32)
+shape.point_mark(mysyn, 2, 4, 5)
+shape.label(-150,170,myloc,1,1,0,0,2)
+shape.label(-150,140,distlbl,1,1,0,0,2)
+plot_idx = 3    
+if (switch_plot == 0) {plot_idx = 1}      
+pwm.paper_place(plot_idx,0,0,2)                         // transfer the shape plot to the paper icon 
+sprint(fname,"output/dataset#07/%s_shape.eps",myloc) 
+pwm.printfile(fname, 0, 0)
+pwm.close(plot_idx)	
+	
+// create background activity
+load_file("background.hoc")
+
+// move all synaptic activity to the soma
+if (switch_soma == 1) {
+    access cell.soma                                    // access the soma
+    mysyn.loc(0.5)                                      // move the thalamocortical synapse to the soma
+    for ii = 0, Nsyne-1 {
+        exsyn[ii].loc(0.5)                              // move all other synapses to the soma
+        insyn[ii].loc(0.5)                              
+        //exnetstim[ii].start = 2*tstop                   // set their start time to after the end of the simulation
+        //innetstim[ii].start = 2*tstop                      
+    }
+    //exnetstim[0].interval 	= 1000/(fe*Ne)              // adjust the interval only for the first synapse
+    //innetstim[0].interval 	= 1000/(fi*Ni)
+    //exnetstim[0].start      = 0                         // reset the start time of that synapse to 0
+    //innetstim[0].start      = 0
+    //exnetstim[0].number     = 100*tstop/exnetstim[0].interval                         
+    //innetstim[0].number     = 100*tstop/innetstim[0].interval                         
+}
+
+// new advance procedure
+proc advance() {
+    fadvance()
+    if (switch_print == 1) {   
+	    itot_na = 0
+        itot_ca = 0 
+        itot_ex = 0
+        forall {		
+		    for (x) {   
+  	    	    if (x==0 || x ==1) { continue }
+  	    	    read_compartment_currents(x)
+            }
+        }
+        for ii = 0, NE2S-1 {
+            isyn    = exsyn[ii].i
+            dummy   = exsyn[ii].get_loc()               // get current location
+            vs      = v(dummy)                          // get corresponding voltage
+		    itot_ex = itot_ex + isyn*(vs-ena)/(vs-exsyn[ii].e)*1/(1-ena/ek)
+            pop_section()
+        }
+    }
+}	
+	
+// run simulations
+for idx = 0, gains.size()-1 {
+	
+	// set time reference for each run
+	st = pc.time
+		
+	// set gain
+	gain = gains.x(idx)
+	if (gain < 10) {
+		sprint(gainasastring,"0%-2.2f",gain)
+	} else {
+		sprint(gainasastring,"%-2.2f",gain)
+	}
+	    
+	// update synaptic weights
+	mycon.weight = ge*gain
+	rngseed	     = rngseed + 10*idx
+    for ii = 0, Nsyni-1 {
+        innetstim[ii].seed(rngseed + ii)
+		innetcon[ii].weight = gi
+	}    
+    if (gain == 0) {
+        for ii = 0, Nsyne-1 {
+    	    exnetstim[ii].seed(rngseed + ii)
+    	    exnetcon[ii].weight = ge
+    	} 
+    } else {
+        for ii = 0, Nsyne-1 {
+    		exnetstim[ii].seed(rngseed + ii)
+    		exnetcon[ii].weight = ge*gain  
+    	}   
+    }
+	sprint(seedasastring,"%-d",rngseed)		        
+		
+	// terminal output
+	printf("//\n")
+	printf("//	Running simulation for gain = %-2.2f\n",gain)
+	printf("//\n")		
+	
+	// run statement
+	printf("//		Running simulation...\n")
+	run()
+		
+	// output data
+    if (switch_print == 1) {      
+	    
+        printf("//		Printing output...\n")	
+
+	    sprint(fname,"output/dataset#07/%s_%s_%s_%s_voltage.txt",prefix,myloc,gainasastring,seedasastring) 
+	    outfile.wopen(fname)
+        savevec.printf(outfile, "%g\n")
+        outfile.close()
+	
+        sprint(fname,"output/dataset#07/%s_%s_%s_%s_APs.txt",prefix,myloc,gainasastring,seedasastring)
+        outfile.wopen(fname)	
+        stvector.printf(outfile, "%g\n")
+        outfile.close()		
+
+        sprint(fname,"output/dataset#07/%s_%s_%s_%s_currents.txt",prefix,myloc,gainasastring,seedasastring)
+        outfile.wopen(fname)
+        sprint(cmd,"access cell.%s",myloc)
+        execute1(cmd)	
+        for i = 0, vec_sodium.size()-1 {
+		    outfile.printf("%f\t", vec_sodium.x[i] )
+            outfile.printf("%f\t", vec_calcium.x[i] )
+            outfile.printf("%f\t", vec_ex.x[i] )
+            outfile.printf("%f\n", vec_msi.x[i]*(vec_msv.x[i]-ena)/(vec_msv.x[i]-mysyn.e)*1/(1-ena/ek) )
+	    }
+	    outfile.close()
+    }
+		
+	// print elapsed time and output frequency
+	strdef strt
+	eta = pc.time-st
+	if (eta < 60) {
+		etaout 	= eta
+		strt 	= "seconds"
+	} else {
+		if (eta < 3600) {
+			etaout 	= eta/60
+			strt 	= "minutes"
+		} else {
+			etaout 	= eta/3600
+			strt 	= "hours"
+		}
+	} 
+	printf("//		Elapsed time = %-9.1f %s\n",etaout,strt)	
+	printf("//		Output frequency = %-9.1f Hz\n",1000*stvector.size()/(tstop-tstart))		
+		
+}
+// the end
