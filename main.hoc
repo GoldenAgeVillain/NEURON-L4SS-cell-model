@@ -5,7 +5,7 @@
 //
 //	Downloaded from ModelDB:	2014.07.22
 // 	Modified by: 				Renaud Jolivet
-// 	Last modification:			2014.09.22
+// 	Last modification:			2014.09.24
 // 				
 
 // definitions
@@ -56,7 +56,7 @@ vinit			= -70
 dt				= 0.025 
 steps_per_ms 	= 10
 tstart 			= 0
-tstop 			= 5000//130000
+tstop 			= 130000
 
 // load cell morphology
 load_file("l4sscell.hoc")
@@ -223,16 +223,28 @@ if (switch_soma == 1) {
     mysyn.loc(0.5)                                      // move the thalamocortical synapse to the soma
     for ii = 0, Nsyne-1 {
         exsyn[ii].loc(0.5)                              // move all other synapses to the soma
-        insyn[ii].loc(0.5)                              
-        //exnetstim[ii].start = 2*tstop                   // set their start time to after the end of the simulation
-        //innetstim[ii].start = 2*tstop                      
+        insyn[ii].loc(0.5)
+        if (switch_soma == 2) {
+            // OPTION #2 - Only one synapse with a higher rate                              
+            exnetstim[ii].start = 2*tstop               // set their start time to after the end of the simulation
+            innetstim[ii].start = 2*tstop               
+        }       
     }
-    //exnetstim[0].interval 	= 1000/(fe*Ne)              // adjust the interval only for the first synapse
-    //innetstim[0].interval 	= 1000/(fi*Ni)
-    //exnetstim[0].start      = 0                         // reset the start time of that synapse to 0
-    //innetstim[0].start      = 0
-    //exnetstim[0].number     = 100*tstop/exnetstim[0].interval                         
-    //innetstim[0].number     = 100*tstop/innetstim[0].interval                         
+    if (switch_soma == 2) {
+        // OPTION #2 - Only one synapse with a higher rate
+        exnetstim[0].interval 	= 1000/(fe*Ne)          // adjust the interval only for the first synapse
+        innetstim[0].interval 	= 1000/(fi*Ni)
+        exnetstim[0].start      = 0                     // reset the start time of that synapse to 0
+        innetstim[0].start      = 0
+        exnetstim[0].number     = 100*tstop/exnetstim[0].interval                         
+        innetstim[0].number     = 100*tstop/innetstim[0].interval  
+        
+        // OPTION #2 - Record the generated conductances
+        objref vec_cond_e, vec_cond_i
+        vec_cond_e      = new Vector()
+        vec_cond_i		= new Vector()
+        vec_cond_e.record(&itot_na)
+        vec_cond_i.record(&itot_ca)                           
 }
 
 // new advance procedure
