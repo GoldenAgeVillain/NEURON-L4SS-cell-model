@@ -23,6 +23,10 @@ gi              = 0.0005 // µS
 prefix          = "std"
 if ( gi == 0 ) { prefix = "woinh" }
 if ( switch_soma == 1 ) { 
+    prefix  = "clustered" 
+    gi      = 0
+}
+if ( switch_soma == 2 ) { 
     prefix  = "clustered_spec" 
     gi      = 0
 }
@@ -56,7 +60,7 @@ vinit			= -70
 dt				= 0.025 
 steps_per_ms 	= 10
 tstart 			= 0
-tstop 			= 1000//130000
+tstop 			= 50//130000
 
 // load cell morphology
 load_file("l4sscell.hoc")
@@ -219,7 +223,7 @@ load_file("background.hoc")
 
 // move all synaptic activity to the soma
 objref vec_cond_e, vec_cond_i
-if (switch_soma == 1) {
+if (switch_soma > 0) {
     access cell.soma                                    // access the soma
     mysyn.loc(0.5)                                      // move the thalamocortical synapse to the soma
     for ii = 0, Nsyne-1 {
@@ -243,8 +247,8 @@ if (switch_soma == 1) {
         // OPTION #2 - Record the generated conductances
         vec_cond_e      = new Vector()
         vec_cond_i		= new Vector()
-        vec_cond_e.record(&exnetstim[0].g)
-        vec_cond_i.record(&innetstim[0].g)                           
+        vec_cond_e.record(&exsyn[0].g)
+        vec_cond_i.record(&insyn[0].g)                           
     }
 }
 
@@ -340,6 +344,17 @@ for idx = 0, gains.size()-1 {
             outfile.printf("%f\n", vec_msi.x[i]*(vec_msv.x[i]-ena)/(vec_msv.x[i]-mysyn.e)*1/(1-ena/ek) )
 	    }
 	    outfile.close()
+            
+        if (switch_soma == 2) {
+            sprint(fname,"output/dataset#07/%s_%s_%s_%s_conductances.txt",prefix,myloc,gainasastring,seedasastring) 
+            outfile.wopen(fname)
+            for i = 0, vec_cond_e.size()-1 {
+                outfile.printf("%f\t", vec_cond_e.x[i] )
+                outfile.printf("%f\n", vec_cond_i.x[i] )
+            }
+            outfile.close()
+        }
+                
     }
 		
 	// print elapsed time and output frequency
