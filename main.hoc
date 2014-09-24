@@ -60,7 +60,7 @@ vinit			= -70
 dt				= 0.025 
 steps_per_ms 	= 10
 tstart 			= 0
-tstop 			= 50//130000
+tstop 			= 130000
 
 // load cell morphology
 load_file("l4sscell.hoc")
@@ -230,12 +230,14 @@ if (switch_soma > 0) {
         exsyn[ii].loc(0.5)                              // move all other synapses to the soma
         insyn[ii].loc(0.5)
         if (switch_soma == 2) {
+            
             // OPTION #2 - Only one synapse with a higher rate                              
             exnetstim[ii].start = 2*tstop               // set their start time to after the end of the simulation
             innetstim[ii].start = 2*tstop               
         }       
     }
     if (switch_soma == 2) {
+        
         // OPTION #2 - Only one synapse with a higher rate
         exnetstim[0].interval 	= 1000/(fe*Ne)          // adjust the interval only for the first synapse
         innetstim[0].interval 	= 1000/(fi*Ni)
