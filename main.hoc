@@ -17,7 +17,7 @@ gains 			= new Vector()
 pc 				= new ParallelContext()
 switch_plot     = 1
 switch_print    = 1     
-switch_soma     = 1
+switch_soma     = 2
 ge              = 0.002 // µS
 gi              = 0.0005 // µS
 prefix          = "std"
@@ -56,7 +56,7 @@ vinit			= -70
 dt				= 0.025 
 steps_per_ms 	= 10
 tstart 			= 0
-tstop 			= 130000
+tstop 			= 1000//130000
 
 // load cell morphology
 load_file("l4sscell.hoc")
@@ -218,6 +218,7 @@ pwm.close(plot_idx)
 load_file("background.hoc")
 
 // move all synaptic activity to the soma
+objref vec_cond_e, vec_cond_i
 if (switch_soma == 1) {
     access cell.soma                                    // access the soma
     mysyn.loc(0.5)                                      // move the thalamocortical synapse to the soma
@@ -240,11 +241,11 @@ if (switch_soma == 1) {
         innetstim[0].number     = 100*tstop/innetstim[0].interval  
         
         // OPTION #2 - Record the generated conductances
-        objref vec_cond_e, vec_cond_i
         vec_cond_e      = new Vector()
         vec_cond_i		= new Vector()
-        vec_cond_e.record(&itot_na)
-        vec_cond_i.record(&itot_ca)                           
+        vec_cond_e.record(&exnetstim[0].g)
+        vec_cond_i.record(&innetstim[0].g)                           
+    }
 }
 
 // new advance procedure
