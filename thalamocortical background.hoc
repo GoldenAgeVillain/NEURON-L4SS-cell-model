@@ -1,0 +1,58 @@
+// 
+//	Creates background activity for thalamocortical inputs
+//
+// 	Inspired by Waters and Helmchen, J Neurosci 2006
+//
+//	Courtesy of Arnd Roth 
+// 	Modified by: 				Renaud Jolivet
+// 	Last modification:			2014.10.23
+// 		 
+
+//
+// The structure of the code copies the structure from background.hoc and uses some 
+// of the variables defined in background.hoc. It therefore has to be called after
+// background.hoc.
+//
+
+objectvar 	tcnetstim[dendsegments], tcsyn[dendsegments], tcnetcon[dendsegments]
+create 		tccells[dendsegments] // dummy compartments
+objref      tcgauss
+tcgauss = new Vector(dendsegments)
+
+// parameters
+PI              = 3.1415926
+Ntc 			= 470	    // number of thalamocortical cells/spines
+ftc 			= 4		    // frequency within the thalamic population (Hz)
+i 				= 0    
+
+// calculate scaling factor based on da Costa and Martin (J Neurosci 2011)   
+forsec cell.dends for(x, 0) {
+    tcgauss.x[i]            = exp(-(distance(x)-83.6)^2/(2*28.3^2))/sqrt(2*PI*28.3^2) 
+    i += 1    
+}
+i               = 0
+
+forsec cell.dends for(x, 0) {
+
+	tccells[i] tcnetstim[i] = new NetStim(0.5)
+	tcnetstim[i].interval 	= 1000/(Ntc*ftc) // ms
+	tcnetstim[i].interval 	= 1000/(Ntc*ftc)*tcgauss.sum()/tcgauss.x[i]
+	tcnetstim[i].number 	= 100*tstop/tcnetstim[i].interval
+	tcnetstim[i].start 		= 0
+	tcnetstim[i].noise 		= 1
+	tcnetstim[i].seed(rngseed + i)
+
+	tcsyn[i]                = new Exp2Syn(x)
+	tcsyn[i].tau1 			= 0.3
+	tcsyn[i].tau2 			= 1.7
+	tcsyn[i].e 				= 0
+
+	tcnetcon[i]             = new NetCon(tcnetstim[i], tcsyn[i], 0.5, 0, gtc)
+
+    //printf("%-2.2f\t%-2.6f\n",distance(x),1000/tcnetstim[i].interval) // to plot effective frequency vs distance to soma
+        
+	i += 1
+        
+}
+
+access cell.soma

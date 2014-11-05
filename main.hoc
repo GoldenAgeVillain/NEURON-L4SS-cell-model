@@ -20,6 +20,7 @@ switch_print    = 1
 switch_soma     = 0
 ge              = 0.002 // µS
 gi              = 0.0005 // µS
+gtc             = 0.002 // µS
 prefix          = "std"
 if ( gi == 0 ) { prefix = "woinh" }
 if ( switch_soma == 1 ) { 
@@ -204,11 +205,21 @@ proc InitializeInputs(){
 objref fih
 fih = new FInitializeHandler(1,"InitializeInputs()")    // create series of events to trigger the thalamocortical synapse
 
+// create background activity
+load_file("background.hoc")
+load_file("thalamocortical background.hoc")   
+
 // display the shape and extra synapse
 objref shape
 shape = new Shape(0)
-shape.view(-200, -200, 400, 400, 900, 200, 300.48, 300.32)
-shape.point_mark(mysyn, 2, 4, 5)
+shape.view(-200, -200, 400, 400, 900, 200, 300.48, 300.32)    
+shape.show(0)                                           // show diameter
+for i = 0, dendsegments-1 {
+    shape.point_mark(exsyn[i], 2, 4, 1/2*1000/exnetstim[i].interval)   
+    shape.point_mark(insyn[i], 3, 4, 1/2*1000/innetstim[i].interval)   
+    //shape.point_mark(tcsyn[i], 5, 4, 1/2*1000/tcnetstim[i].interval)
+}
+//shape.point_mark(mysyn, 4, 5, 4)
 shape.label(-150,170,myloc,1,1,0,0,2)
 shape.label(-150,140,distlbl,1,1,0,0,2)
 plot_idx = 3    
@@ -216,10 +227,7 @@ if (switch_plot == 0) {plot_idx = 1}
 pwm.paper_place(plot_idx,0,0,2)                         // transfer the shape plot to the paper icon 
 sprint(fname,"output/dataset#07/%s_shape.eps",myloc) 
 pwm.printfile(fname, 0, 0)
-pwm.close(plot_idx)	
-	
-// create background activity
-load_file("background.hoc")
+//pwm.close(plot_idx)	 
 
 // move all synaptic activity to the soma
 objref vec_cond_e, vec_cond_i
