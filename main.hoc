@@ -5,7 +5,7 @@
 //
 //	Downloaded from ModelDB:	2014.07.22
 // 	Modified by: 				Renaud Jolivet
-// 	Last modification:			2014.09.24
+// 	Last modification:			2014.11.07
 // 				
 
 // definitions
@@ -17,10 +17,10 @@ gains 			= new Vector()
 pc 				= new ParallelContext()
 switch_plot     = 1
 switch_print    = 1     
-switch_soma     = 0
-ge              = 0.002 // µS
+switch_soma     = 2
+ge              = 0.0008 // µS
 gi              = 0.0005 // µS
-gtc             = 0.002 // µS
+gtc             = 0.0008 // µS
 prefix          = "std"
 if ( gi == 0 ) { prefix = "woinh" }
 if ( switch_soma == 1 ) { 
@@ -41,7 +41,7 @@ if ( switch_soma == 2 ) {
 //	 
 rngseed 		= 1291				                        // 1. Seed of the RNG
 myloc 			= "a3_122"			                        // 2. Dendrite where to place the thalamocortical synapse
-gains.append(0)//, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 6, 9, 12)    // 3. List of gains to be tested	
+gains.append(1)//0, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 6, 9, 12)    // 3. List of gains to be tested	
     
 // permutation of the gains
 if (name_declared("zzz")==5) {
@@ -227,21 +227,23 @@ if (switch_plot == 0) {plot_idx = 1}
 pwm.paper_place(plot_idx,0,0,2)                         // transfer the shape plot to the paper icon 
 sprint(fname,"output/dataset#07/%s_shape.eps",myloc) 
 pwm.printfile(fname, 0, 0)
-//pwm.close(plot_idx)	 
+pwm.close(plot_idx)	 
 
 // move all synaptic activity to the soma
-objref vec_cond_e, vec_cond_i
+objref vec_cond_e, vec_cond_i, vec_cond_tc
 if (switch_soma > 0) {
     access cell.soma                                    // access the soma
     mysyn.loc(0.5)                                      // move the thalamocortical synapse to the soma
     for ii = 0, Nsyne-1 {
         exsyn[ii].loc(0.5)                              // move all other synapses to the soma
         insyn[ii].loc(0.5)
+        tcsyn[ii].loc(0.5)
         if (switch_soma == 2) {
             
             // OPTION #2 - Only one synapse with a higher rate                              
             exnetstim[ii].start = 2*tstop               // set their start time to after the end of the simulation
             innetstim[ii].start = 2*tstop               
+            tcnetstim[ii].start = 2*tstop               
         }       
     }
     if (switch_soma == 2) {
@@ -249,16 +251,21 @@ if (switch_soma > 0) {
         // OPTION #2 - Only one synapse with a higher rate
         exnetstim[0].interval 	= 1000/(fe*Ne)          // adjust the interval only for the first synapse
         innetstim[0].interval 	= 1000/(fi*Ni)
+        tcnetstim[0].interval 	= 1000/(Ntc*ftc)
         exnetstim[0].start      = 0                     // reset the start time of that synapse to 0
         innetstim[0].start      = 0
+        tcnetstim[0].start      = 0
         exnetstim[0].number     = 100*tstop/exnetstim[0].interval                         
         innetstim[0].number     = 100*tstop/innetstim[0].interval  
+        tcnetstim[0].number     = 100*tstop/innetstim[0].interval  
         
-        // OPTION #2 - Record the generated conductances
+        // OPTION #2 - Record the generated conductance
         vec_cond_e      = new Vector()
         vec_cond_i		= new Vector()
+        vec_cond_tc		= new Vector()
         vec_cond_e.record(&exsyn[0].g)
         vec_cond_i.record(&insyn[0].g)                           
+        vec_cond_tc.record(&tcsyn[0].g)                           
     }
 }
 
@@ -300,7 +307,7 @@ for idx = 0, gains.size()-1 {
 	}
 	    
 	// update synaptic weights
-	mycon.weight = ge*gain
+	mycon.weight = 0 // ge*gain
 	rngseed	     = rngseed + 10*idx
     for ii = 0, Nsyni-1 {
         innetstim[ii].seed(rngseed + ii)
@@ -360,7 +367,8 @@ for idx = 0, gains.size()-1 {
             outfile.wopen(fname)
             for i = 0, vec_cond_e.size()-1 {
                 outfile.printf("%f\t", vec_cond_e.x[i] )
-                outfile.printf("%f\n", vec_cond_i.x[i] )
+                outfile.printf("%f\t", vec_cond_i.x[i] )
+                outfile.printf("%f\n", vec_cond_tc.x[i] )
             }
             outfile.close()
         }
