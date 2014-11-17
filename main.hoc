@@ -5,30 +5,34 @@
 //
 //	Downloaded from ModelDB:	2014.07.22
 // 	Modified by: 				Renaud Jolivet
-// 	Last modification:			2014.11.07
+// 	Last modification:			2014.17.17
 // 				
 
 // definitions
-strdef 		seedasastring, gainasastring, myloc, fname, prefix
+strdef 		seedasastring, gainasastring, fname, prefix
 objectvar 	outfile	
-objref 		gains, pc
+objref 		gains, pc, myloc_name, myloc_pos
 outfile 		= new File()
 gains 			= new Vector()	
+myloc_pos 	    = new Vector()	
+myloc_name 		= new Vector()	
 pc 				= new ParallelContext()
 switch_plot     = 1
 switch_print    = 1     
-switch_soma     = 2
+switch_soma     = 0
+switch_scaling  = 1
 ge              = 0.0008 // µS
 gi              = 0.0005 // µS
 gtc             = 0.0008 // µS
 prefix          = "std"
 if ( gi == 0 ) { prefix = "woinh" }
+if (switch_scaling == 0) { prefix = "unscaled" }
 if ( switch_soma == 1 ) { 
     prefix  = "clustered" 
     gi      = 0
 }
 if ( switch_soma == 2 ) { 
-    prefix  = "clustered_spec" 
+    prefix  = "unique" 
     gi      = 0
 }
 
@@ -40,8 +44,9 @@ if ( switch_soma == 2 ) {
 //	(see runSimulations.hoc)
 //	 
 rngseed 		= 1291				                        // 1. Seed of the RNG
-myloc 			= "a3_122"			                        // 2. Dendrite where to place the thalamocortical synapse
-gains.append(1)//0, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 6, 9, 12)    // 3. List of gains to be tested	
+myloc_name.append("a3_122","a3_121","a3_12")			    // 2. Dendrite where to place the thalamocortical synapse
+myloc_pos.append(0.5,0.2,0.9)			                
+gains.append(1)//(0, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 6, 9, 12)    // 3. List of gains to be tested	
     
 // permutation of the gains
 if (name_declared("zzz")==5) {
@@ -174,7 +179,7 @@ inputFile.ropen("input/inputSpikeTrain.txt")
 inputSpikeTrain.scanf(inputFile)
 inputFile.close()
 		
-// create the extra synapse
+// create the extra input
 objectvar   mysyn, mystim, mycon
 objref      vec_msi, vec_msv
 strdef      distlbl, cmd
@@ -185,7 +190,7 @@ myTRC mystim	= new NetStim(0.5)
 mystim.number 	= 0										// ensure that the synapse is not spontaneously activated
 sprint(cmd,"access cell.%s",myloc)
 execute1(cmd)
-mysyn 			= new Exp2Syn(0.5)
+mysyn 			= new Exp2Syn(0.15)
 mysyn.tau1 		= 0.3
 mysyn.tau2 		= 1.7
 mysyn.e 		= 0
@@ -193,14 +198,12 @@ vec_msi.record(&mysyn.i)                                // record the synaptic c
 sprint(cmd,"vec_msv.record(&cell.%s.v(.5))",myloc)      
 execute1(cmd)                                           // record the voltage in the corresponding compartment
 mycon 			= new NetCon(mystim, mysyn, 1, 0, 1)	// connect the TRC to the synapse (dummy weight)
-mydist			= distance(0.5)
+mydist			= distance(0.15)
 sprint(distlbl,"distance to soma %-4.1f um",mydist)     // create label to print the distance on the shape plot
 
 // handlers
 proc InitializeInputs(){
-	for ii = 0, inputSpikeTrain.size()-1 {
-		mycon.event(inputSpikeTrain.x[ii])
-	}
+	for ii = 0, inputSpikeTrain.size()-1 {mycon.event(inputSpikeTrain.x[ii])}
 }	
 objref fih
 fih = new FInitializeHandler(1,"InitializeInputs()")    // create series of events to trigger the thalamocortical synapse
@@ -214,27 +217,28 @@ objref shape
 shape = new Shape(0)
 shape.view(-200, -200, 400, 400, 900, 200, 300.48, 300.32)    
 shape.show(0)                                           // show diameter
-for i = 0, dendsegments-1 {
-    shape.point_mark(exsyn[i], 2, 4, 1/2*1000/exnetstim[i].interval)   
-    shape.point_mark(insyn[i], 3, 4, 1/2*1000/innetstim[i].interval)   
-    //shape.point_mark(tcsyn[i], 5, 4, 1/2*1000/tcnetstim[i].interval)
-}
-//shape.point_mark(mysyn, 4, 5, 4)
+//for i = 0, dendsegments-1 {
+//    shape.point_mark(exsyn[i], 2, 4, 5*1/2*1000/exnetstim[i].interval)   
+//    shape.point_mark(insyn[i], 3, 4, 5*1/2*1000/innetstim[i].interval)   
+//    shape.point_mark(tcsyn[i], 5, 4, 2*1/2*1000/tcnetstim[i].interval)
+//}
+shape.point_mark(mysyn, 4, 5, 4)
 shape.label(-150,170,myloc,1,1,0,0,2)
 shape.label(-150,140,distlbl,1,1,0,0,2)
 plot_idx = 3    
 if (switch_plot == 0) {plot_idx = 1}      
 pwm.paper_place(plot_idx,0,0,2)                         // transfer the shape plot to the paper icon 
-sprint(fname,"output/dataset#07/%s_shape.eps",myloc) 
+sprint(fname,"output/dataset#10/shape.eps") 
 pwm.printfile(fname, 0, 0)
-pwm.close(plot_idx)	 
+shape.observe(cell.dends)    
+//pwm.close(plot_idx)	                                // close the shape plot
 
 // move all synaptic activity to the soma
 objref vec_cond_e, vec_cond_i, vec_cond_tc
 if (switch_soma > 0) {
     access cell.soma                                    // access the soma
     mysyn.loc(0.5)                                      // move the thalamocortical synapse to the soma
-    for ii = 0, Nsyne-1 {
+    for ii = 0, dendsegments-1 {
         exsyn[ii].loc(0.5)                              // move all other synapses to the soma
         insyn[ii].loc(0.5)
         tcsyn[ii].loc(0.5)
@@ -276,17 +280,20 @@ proc advance() {
 	    itot_na = 0
         itot_ca = 0 
         itot_ex = 0
+        itot_tc = 0
         forall {		
 		    for (x) {   
   	    	    if (x==0 || x ==1) { continue }
   	    	    read_compartment_currents(x)
             }
         }
-        for ii = 0, NE2S-1 {
+        for ii = 0, dendsegments-1 {
             isyn    = exsyn[ii].i
             dummy   = exsyn[ii].get_loc()               // get current location
             vs      = v(dummy)                          // get corresponding voltage
 		    itot_ex = itot_ex + isyn*(vs-ena)/(vs-exsyn[ii].e)*1/(1-ena/ek)
+            isyn    = tcsyn[ii].i
+            itot_tc = itot_tc + isyn*(vs-ena)/(vs-tcsyn[ii].e)*1/(1-ena/ek)    
             pop_section()
         }
     }
@@ -307,23 +314,14 @@ for idx = 0, gains.size()-1 {
 	}
 	    
 	// update synaptic weights
-	mycon.weight = 0 // ge*gain
+	mycon.weight = gtc*gain
 	rngseed	     = rngseed + 10*idx
-    for ii = 0, Nsyni-1 {
-        innetstim[ii].seed(rngseed + ii)
-		innetcon[ii].weight = gi
-	}    
-    if (gain == 0) {
-        for ii = 0, Nsyne-1 {
-    	    exnetstim[ii].seed(rngseed + ii)
-    	    exnetcon[ii].weight = ge
-    	} 
-    } else {
-        for ii = 0, Nsyne-1 {
-    		exnetstim[ii].seed(rngseed + ii)
-    		exnetcon[ii].weight = ge*gain  
-    	}   
-    }
+    if (switch_scaling == 1) {
+        for ii = 0, dendsegments-1 {
+            tcnetstim[ii].seed(rngseed + ii)
+		    tcnetcon[ii].weight = gtc*gain
+	    }
+    }       
 	sprint(seedasastring,"%-d",rngseed)		        
 		
 	// terminal output
@@ -340,17 +338,17 @@ for idx = 0, gains.size()-1 {
 	    
         printf("//		Printing output...\n")	
 
-	    sprint(fname,"output/dataset#07/%s_%s_%s_%s_voltage.txt",prefix,myloc,gainasastring,seedasastring) 
+	    sprint(fname,"output/dataset#10/%s_%s_%s_voltage.txt",prefix,gainasastring,seedasastring) 
 	    outfile.wopen(fname)
         savevec.printf(outfile, "%g\n")
         outfile.close()
 	
-        sprint(fname,"output/dataset#07/%s_%s_%s_%s_APs.txt",prefix,myloc,gainasastring,seedasastring)
+        sprint(fname,"output/dataset#10/%s_%s_%s_APs.txt",prefix,gainasastring,seedasastring)
         outfile.wopen(fname)	
         stvector.printf(outfile, "%g\n")
         outfile.close()		
 
-        sprint(fname,"output/dataset#07/%s_%s_%s_%s_currents.txt",prefix,myloc,gainasastring,seedasastring)
+        sprint(fname,"output/dataset#10/%s_%s_%s_currents.txt",prefix,gainasastring,seedasastring)
         outfile.wopen(fname)
         sprint(cmd,"access cell.%s",myloc)
         execute1(cmd)	
@@ -363,7 +361,7 @@ for idx = 0, gains.size()-1 {
 	    outfile.close()
             
         if (switch_soma == 2) {
-            sprint(fname,"output/dataset#07/%s_%s_%s_%s_conductances.txt",prefix,myloc,gainasastring,seedasastring) 
+            sprint(fname,"output/dataset#10/%s_%s_%s_%s_conductances.txt",prefix,myloc,gainasastring,seedasastring) 
             outfile.wopen(fname)
             for i = 0, vec_cond_e.size()-1 {
                 outfile.printf("%f\t", vec_cond_e.x[i] )

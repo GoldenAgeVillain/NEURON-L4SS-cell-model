@@ -5,7 +5,7 @@
 //
 //	Courtesy of Arnd Roth 
 // 	Modified by: 				Renaud Jolivet
-// 	Last modification:			2014.11.07
+// 	Last modification:			2014.17.07
 // 		 
 
 dendarea 		= 0
@@ -62,7 +62,4 @@ forsec cell.dends for(x, 0) {
 	i += 1
 }
 
-Nsyne = dendsegments
-NE2S  = dendsegments
-Nsyni = dendsegments
 access cell.soma
