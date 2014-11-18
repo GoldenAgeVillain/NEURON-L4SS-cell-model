@@ -8,42 +8,59 @@
 // 	Last modification:			2014.11.18
 // 				
 
-// definitions
+// initial definitions
 strdef 		seedasastring, gainasastring, fname, prefix
 objectvar 	outfile	
 objref 		gains, pc, myloc_pos, myloc_name
-outfile 		= new File()
+outfile 	    = new File()
 gains 			= new Vector()	
 myloc_pos 	    = new Vector()	
 myloc_name      = new SectionList()
 pc 				= new ParallelContext()
     
 // scenarios
-if (name_declared("scenario")==5) {
-    continue
+switch_plot     = 1
+switch_print    = 1         
+if (name_declared("scen")==5) {     // defines the default scenario
+    scenario = scen
 } else {
     scenario = 1
 }
-    
-    
-switch_plot     = 1
-switch_print    = 1     
-switch_soma     = 0
-switch_scaling  = 1
-ge              = 0.0008 // µS
-gi              = 0.0005 // µS
-gtc             = 0.0008 // µS
-gms             = 0.0008 // µS
-prefix          = "std"
-if ( gi == 0 ) { prefix = "woinh" }
-if (switch_scaling == 0) { prefix = "unscaled" }
-if ( switch_soma == 1 ) { 
-    prefix  = "clustered" 
-    gi      = 0
+if ( scenario == 1 ) {              // complete simulation scaling all thalamocortical inputs
+    switch_soma     = 0
+    switch_scaling  = 1
+    ge              = 0.0008 // µS
+    gi              = 0.0005 // µS
+    gtc             = 0.0008 // µS
+    gms             = 0.0008 // µS
+    prefix          = "std"
 }
-if ( switch_soma == 2 ) { 
-    prefix  = "unique" 
-    gi      = 0
+if ( scenario == 2 ) {              // complete simulation scaling only the input of interest    
+    switch_soma     = 0
+    switch_scaling  = 0
+    ge              = 0.0008 // µS
+    gi              = 0.0005 // µS
+    gtc             = 0.0008 // µS
+    gms             = 0.0008 // µS
+    prefix          = "unscaled"
+}
+if ( scenario == 3 ) {              // simulation without inhibition scaling all thalamocortical inputs
+    switch_soma     = 0
+    switch_scaling  = 1
+    ge              = 0.0008 // µS
+    gi              = 0
+    gtc             = 0.0008 // µS
+    gms             = 0.0008 // µS
+    prefix          = "woinh"
+}
+if ( scenario == 4 ) {              // one effective synapse at the soma
+    switch_soma     = 2
+    switch_scaling  = 1
+    ge              = 0.0008 // µS
+    gi              = 0
+    gtc             = 0.0008 // µS
+    gms             = 0.0008 // µS
+    prefix          = "unique"
 }
 
 //
@@ -53,10 +70,8 @@ if ( switch_soma == 2 ) {
 //		3. The amplification gain factor.
 //	(see runSimulations.hoc)
 //	 
-rngseed 		= 1291				                        // 1. Seed of the RNG
-myloc_pos.append(0.5,0.2,0.9)			          
-ntc             = myloc_pos.size()      
-gains.append(1)//(0, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 6, 9, 12)    // 3. List of gains to be tested	
+rngseed 		= 1291				                                // 1. Seed of the RNG
+gains.append(1)//(0, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 6, 9, 12)       // 3. List of gains to be tested	
     
 // permutation of the gains
 if (name_declared("perm")==5) {
@@ -76,7 +91,7 @@ vinit			= -70
 dt				= 0.025 
 steps_per_ms 	= 10
 tstart 			= 0
-tstop 			= 500
+tstop 			= 130000
 
 // load cell morphology
 load_file("l4sscell.hoc")
@@ -101,8 +116,11 @@ cabar			= 0.000003
 // create cell
 objref cell
 cell 			= new l4(0,0)
-    
-access cell.a3_122                                          // 2. Dendrites where to place the thalamocortical synapse
+ 
+// thalamocortical contacts
+myloc_pos.append(0.5,0.2,0.9)			          
+ntc             = myloc_pos.size()      
+access cell.a3_122                                                  // 2. Dendrites where to place the thalamocortical synapse
 myloc_name.append()
 access cell.a3_121                                         
 myloc_name.append()
@@ -142,7 +160,7 @@ proc init_active() {
 	}
 }
 init_active()
-cell.soma distance()                                    // set cell.soma(0) as the origin for distance measurements
+cell.soma distance()                                                // set cell.soma(0) as the origin for distance measurements
 		
 // record voltage at the soma
 objref savevec
@@ -186,12 +204,12 @@ myapc.record(stvector)
 	
 // create graph to display the voltage at the soma
 objref g, pwm
-pwm 			= new PWManager()	                    // to manage windows
+pwm 			= new PWManager()                               // to manage windows
 if (switch_plot == 1) {  
     g 			= new Graph()	      
-    addplot(g,0)                                        // add 'g' to the list of stuff updated at each iteration
-    g.addvar("cell.soma.v(.5)",2,1)                     // add the somatic voltage to 'g', color index 2 (red), brush index 1 (line width 1)
-    g.size(0,tstop,-80,80)                              // adjust the scale of the 'g'
+    addplot(g,0)                                                // add 'g' to the list of stuff updated at each iteration
+    g.addvar("cell.soma.v(.5)",2,1)                             // add the somatic voltage to 'g', color index 2 (red), brush index 1 (line width 1)
+    g.size(0,tstop,-80,80)                                      // adjust the scale of the 'g'
 }
 	
 // load external spike train
@@ -268,21 +286,21 @@ pwm.paper_place(plot_idx,0,0,2)                                         // trans
 sprint(fname,"output/dataset#10/shape.eps") 
  shape.observe(cell.dends)    
 pwm.printfile(fname, 0, 0)
-//pwm.close(plot_idx)	                                                // close the shape plot
+pwm.close(plot_idx)	                                                    // close the shape plot
 
 // move all synaptic activity to the soma
 objref vec_cond_e, vec_cond_i, vec_cond_tc
 if (switch_soma > 0) {
-    access cell.soma                                    // access the soma
-    mysyn.loc(0.5)                                      // move the thalamocortical synapse to the soma
+    access cell.soma                                                    // access the soma
+    for ii = 0, ntc-1 { mysyn[ii].loc(0.5) }                            // move the thalamocortical synapses to the soma
     for ii = 0, dendsegments-1 {
-        exsyn[ii].loc(0.5)                              // move all other synapses to the soma
+        exsyn[ii].loc(0.5)                                              // move all other synapses to the soma
         insyn[ii].loc(0.5)
         tcsyn[ii].loc(0.5)
         if (switch_soma == 2) {
             
             // OPTION #2 - Only one synapse with a higher rate                              
-            exnetstim[ii].start = 2*tstop               // set their start time to after the end of the simulation
+            exnetstim[ii].start = 2*tstop                               // set their start time to after the end of the simulation
             innetstim[ii].start = 2*tstop               
             tcnetstim[ii].start = 2*tstop               
         }       
@@ -290,10 +308,10 @@ if (switch_soma > 0) {
     if (switch_soma == 2) {
         
         // OPTION #2 - Only one synapse with a higher rate
-        exnetstim[0].interval 	= 1000/(fe*Ne)          // adjust the interval only for the first synapse
+        exnetstim[0].interval 	= 1000/(fe*Ne)                          // adjust the interval only for the first synapse
         innetstim[0].interval 	= 1000/(fi*Ni)
         tcnetstim[0].interval 	= 1000/(Ntc*ftc)
-        exnetstim[0].start      = 0                     // reset the start time of that synapse to 0
+        exnetstim[0].start      = 0                                     // reset the start time of that synapse to 0
         innetstim[0].start      = 0
         tcnetstim[0].start      = 0
         exnetstim[0].number     = 100*tstop/exnetstim[0].interval                         
@@ -327,7 +345,7 @@ proc advance() {
         }
         for ii = 0, dendsegments-1 {
             isyn    = exsyn[ii].i            
-            vs      = v(exsyn[ii].get_loc())                // get voltage at that location
+            vs      = v(exsyn[ii].get_loc())                            // get voltage at that location
 		    itot_ex = itot_ex + isyn*(vs-ena)/(vs-exsyn[ii].e)*1/(1-ena/ek)
             isyn    = tcsyn[ii].i
             itot_tc = itot_tc + isyn*(vs-ena)/(vs-tcsyn[ii].e)*1/(1-ena/ek)    
@@ -369,7 +387,7 @@ for idx = 0, gains.size()-1 {
 		
 	// terminal output
 	printf("//\n")
-	printf("//	Running simulation for gain = %-2.2f\n",gain)
+	printf("//	Running simulation for gain = %-2.2f and scenario #0%d\n",gain,scenario)
 	printf("//\n")		
 	
 	// run statement

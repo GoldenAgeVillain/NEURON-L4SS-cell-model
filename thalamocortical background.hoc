@@ -21,8 +21,8 @@ tcgauss = new Vector(dendsegments)
 
 // parameters
 PI              = 3.1415926
-Ntc 			= 470	    // number of thalamocortical spines
-ftc 			= 4		    // frequency within the thalamic population (Hz)
+Ntc 			= 470 // number of thalamocortical spines
+ftc 			= 4	  // frequency within the thalamic population (Hz)
 i 				= 0    
 
 // calculate scaling factor based on da Costa and Martin (J Neurosci 2011)   
