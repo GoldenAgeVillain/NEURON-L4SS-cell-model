@@ -21,7 +21,7 @@ pc 				= new ParallelContext()
 // scenarios
 switch_plot     = 1
 switch_print    = 1         
-if (name_declared("scen")==1) {     // defines the default scenario
+if (name_declared("scen")==5) {     // defines the default scenario
     scenario = scen
 } else {
     scenario = 1
