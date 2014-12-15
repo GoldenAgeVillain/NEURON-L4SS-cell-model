@@ -283,7 +283,7 @@ forsec myloc_name {
 plot_idx = 3    
 if (switch_plot == 0) {plot_idx = 1}      
 pwm.paper_place(plot_idx,0,0,2)                                         // transfer the shape plot to the paper icon 
-sprint(fname,"output/dataset#10/shape.eps") 
+sprint(fname,"output/dataset#11/shape.eps") 
  shape.observe(cell.dends)    
 pwm.printfile(fname, 0, 0)
 pwm.close(plot_idx)	                                                    // close the shape plot
