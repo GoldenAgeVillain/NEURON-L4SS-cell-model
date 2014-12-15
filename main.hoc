@@ -5,7 +5,7 @@
 //
 //	Downloaded from ModelDB:	2014.07.22
 // 	Modified by: 				Renaud Jolivet
-// 	Last modification:			2014.11.18
+// 	Last modification:			2014.12.15
 // 				
 
 // initial definitions
@@ -21,7 +21,7 @@ pc 				= new ParallelContext()
 // scenarios
 switch_plot     = 1
 switch_print    = 1         
-if (name_declared("scen")==5) {     // defines the default scenario
+if (name_declared("scen")==1) {     // defines the default scenario
     scenario = scen
 } else {
     scenario = 1
@@ -48,7 +48,7 @@ if ( scenario == 3 ) {              // simulation without inhibition scaling all
     switch_soma     = 0
     switch_scaling  = 1
     ge              = 0.0008 // µS
-    gi              = 0
+    gi              = 0      // µS
     gtc             = 0.0008 // µS
     gms             = 0.0008 // µS
     prefix          = "woinh"
@@ -57,7 +57,7 @@ if ( scenario == 4 ) {              // one effective synapse at the soma
     switch_soma     = 2
     switch_scaling  = 1
     ge              = 0.0008 // µS
-    gi              = 0
+    gi              = 0      // µS
     gtc             = 0.0008 // µS
     gms             = 0.0008 // µS
     prefix          = "unique"
@@ -375,7 +375,7 @@ for idx = 0, gains.size()-1 {
 	}
 	    
 	// update synaptic weights
-    for ii = 0, ntc-1 {mycon[ii].weight = gtc*gms}    
+    for ii = 0, ntc-1 {mycon[ii].weight = gms*gain}    
 	rngseed	     = rngseed + 10*idx
     if (switch_scaling == 1) {
         for ii = 0, dendsegments-1 {
@@ -399,17 +399,17 @@ for idx = 0, gains.size()-1 {
 	    
         printf("//		Printing output...\n")	
 
-	    sprint(fname,"output/dataset#10/%s_%s_%s_voltage.txt",prefix,gainasastring,seedasastring) 
+	    sprint(fname,"output/dataset#11/%s_%s_%s_voltage.txt",prefix,gainasastring,seedasastring) 
 	    outfile.wopen(fname)
         savevec.printf(outfile, "%g\n")
         outfile.close()
 	
-        sprint(fname,"output/dataset#10/%s_%s_%s_APs.txt",prefix,gainasastring,seedasastring)
+        sprint(fname,"output/dataset#11/%s_%s_%s_APs.txt",prefix,gainasastring,seedasastring)
         outfile.wopen(fname)	
         stvector.printf(outfile, "%g\n")
         outfile.close()		
 
-        sprint(fname,"output/dataset#10/%s_%s_%s_currents.txt",prefix,gainasastring,seedasastring)
+        sprint(fname,"output/dataset#11/%s_%s_%s_currents.txt",prefix,gainasastring,seedasastring)
         outfile.wopen(fname)
         for i = 0, vec_sodium.size()-1 {
 		    outfile.printf("%f\t", vec_sodium.x[i] )
@@ -421,7 +421,7 @@ for idx = 0, gains.size()-1 {
 	    outfile.close()
             
         if (switch_soma == 2) {
-            sprint(fname,"output/dataset#10/%s_%s_%s_%s_conductances.txt",prefix,myloc,gainasastring,seedasastring) 
+            sprint(fname,"output/dataset#11/%s_%s_%s_%s_conductances.txt",prefix,myloc,gainasastring,seedasastring) 
             outfile.wopen(fname)
             for i = 0, vec_cond_e.size()-1 {
                 outfile.printf("%f\t", vec_cond_e.x[i] )
