@@ -5,7 +5,7 @@
 //
 //	Downloaded from ModelDB:	2014.07.22
 // 	Modified by: 				Renaud Jolivet
-// 	Last modification:			2014.12.15
+// 	Last modification:			2015.03.30
 // 				
 
 // initial definitions
@@ -284,9 +284,9 @@ plot_idx = 3
 if (switch_plot == 0) {plot_idx = 1}      
 pwm.paper_place(plot_idx,0,0,2)                                         // transfer the shape plot to the paper icon 
 sprint(fname,"output/dataset#11/shape.eps") 
- shape.observe(cell.dends)    
+shape.observe(cell.dends)   
 pwm.printfile(fname, 0, 0)
-pwm.close(plot_idx)	                                                    // close the shape plot
+pwm.close(plot_idx)            	                                        // close the shape plot                        
 
 // move all synaptic activity to the soma
 objref vec_cond_e, vec_cond_i, vec_cond_tc
