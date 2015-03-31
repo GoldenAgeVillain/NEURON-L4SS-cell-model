@@ -5,7 +5,7 @@
 //
 //	Downloaded from ModelDB:	2014.07.22
 // 	Modified by: 				Renaud Jolivet
-// 	Last modification:			2015.03.30
+// 	Last modification:			2015.03.31
 // 				
 
 // initial definitions
@@ -70,7 +70,7 @@ if ( scenario == 4 ) {              // one effective synapse at the soma
 //		3. The amplification gain factor.
 //	(see runSimulations.hoc)
 //	 
-rngseed 		= 1291				                                // 1. Seed of the RNG
+rngseed 		= 1789				                                // 1. Seed of the RNG
 gains.append(0, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 6, 9, 12)            // 3. List of gains to be tested	
     
 // permutation of the gains
@@ -118,13 +118,24 @@ objref cell
 cell 			= new l4(0,0)
  
 // thalamocortical contacts
-myloc_pos.append(0.5,0.2,0.9)			          
+//myloc_pos.append(0.5,0.2,0.9)		                                // dataset #11	          
+myloc_pos.append(0.9,0.15,0.1)		                                // dataset #12
 ntc             = myloc_pos.size()      
-access cell.a3_122                                                  // 2. Dendrites where to place the thalamocortical synapse
+
+// dataset #11
+//access cell.a3_122                                                  // 2. Dendrites where to place the thalamocortical synapse
+//myloc_name.append()
+//access cell.a3_121                                         
+//myloc_name.append()
+//access cell.a3_12                                         
+//myloc_name.append()
+
+// dataset #12
+access cell.a5_1111                                                 // 2. Dendrites where to place the thalamocortical synapse
 myloc_name.append()
-access cell.a3_121                                         
+access cell.a5_11111                                       
 myloc_name.append()
-access cell.a3_12                                         
+access cell.a5_11111                                         
 myloc_name.append()
     
 // procedures to set segments and distribute channels
@@ -283,7 +294,7 @@ forsec myloc_name {
 plot_idx = 3    
 if (switch_plot == 0) {plot_idx = 1}      
 pwm.paper_place(plot_idx,0,0,2)                                         // transfer the shape plot to the paper icon 
-sprint(fname,"output/dataset#11/shape.eps") 
+sprint(fname,"output/dataset#12/shape.eps") 
 shape.observe(cell.dends)   
 pwm.printfile(fname, 0, 0)
 pwm.close(plot_idx)            	                                        // close the shape plot                        
@@ -399,17 +410,17 @@ for idx = 0, gains.size()-1 {
 	    
         printf("//		Printing output...\n")	
 
-	    sprint(fname,"output/dataset#11/%s_%s_%s_voltage.txt",prefix,gainasastring,seedasastring) 
+	    sprint(fname,"output/dataset#12/%s_%s_%s_voltage.txt",prefix,gainasastring,seedasastring) 
 	    outfile.wopen(fname)
         savevec.printf(outfile, "%g\n")
         outfile.close()
 	
-        sprint(fname,"output/dataset#11/%s_%s_%s_APs.txt",prefix,gainasastring,seedasastring)
+        sprint(fname,"output/dataset#12/%s_%s_%s_APs.txt",prefix,gainasastring,seedasastring)
         outfile.wopen(fname)	
         stvector.printf(outfile, "%g\n")
         outfile.close()		
 
-        sprint(fname,"output/dataset#11/%s_%s_%s_currents.txt",prefix,gainasastring,seedasastring)
+        sprint(fname,"output/dataset#12/%s_%s_%s_currents.txt",prefix,gainasastring,seedasastring)
         outfile.wopen(fname)
         for i = 0, vec_sodium.size()-1 {
 		    outfile.printf("%f\t", vec_sodium.x[i] )
@@ -421,7 +432,7 @@ for idx = 0, gains.size()-1 {
 	    outfile.close()
             
         if (switch_soma == 2) {
-            sprint(fname,"output/dataset#11/%s_%s_%s_%s_conductances.txt",prefix,myloc,gainasastring,seedasastring) 
+            sprint(fname,"output/dataset#12/%s_%s_%s_%s_conductances.txt",prefix,myloc,gainasastring,seedasastring) 
             outfile.wopen(fname)
             for i = 0, vec_cond_e.size()-1 {
                 outfile.printf("%f\t", vec_cond_e.x[i] )
