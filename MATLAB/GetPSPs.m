@@ -6,7 +6,7 @@
 baseline    = -70; % mV
 
 % get peaks
-data        = load('../output/dataset#10/woinh_01.00_1291_voltage.txt');
+data        = load('../output/dataset#12/std_01.00_1792_voltage.txt');
 [pks,locs]  = findpeaks(data);
 [pks_min,locs_min] = findpeaks(-data);
 if length(pks_min) ~= length(pks)
