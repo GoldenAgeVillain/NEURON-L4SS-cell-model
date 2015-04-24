@@ -118,11 +118,11 @@ objref cell
 cell 			= new l4(0,0)
  
 // thalamocortical contacts
-//myloc_pos.append(0.5,0.2,0.9)		                                // dataset #11	          
-myloc_pos.append(0.9,0.15,0.1)		                                // dataset #12
+//myloc_pos.append(0.5,0.2,0.9)		                                // dataset position #1 
+myloc_pos.append(0.9,0.15,0.1)		                                // dataset position #2
 ntc             = myloc_pos.size()      
 
-// dataset #11
+// dataset positions #1
 //access cell.a3_122                                                  // 2. Dendrites where to place the thalamocortical synapse
 //myloc_name.append()
 //access cell.a3_121                                         
@@ -130,7 +130,7 @@ ntc             = myloc_pos.size()
 //access cell.a3_12                                         
 //myloc_name.append()
 
-// dataset #12
+// dataset positions #2
 access cell.a5_1111                                                 // 2. Dendrites where to place the thalamocortical synapse
 myloc_name.append()
 access cell.a5_11111                                       
@@ -294,7 +294,7 @@ forsec myloc_name {
 plot_idx = 3    
 if (switch_plot == 0) {plot_idx = 1}      
 pwm.paper_place(plot_idx,0,0,2)                                         // transfer the shape plot to the paper icon 
-sprint(fname,"output/dataset#12/shape.eps") 
+sprint(fname,"output/dataset#16/shape.eps") 
 shape.observe(cell.dends)   
 pwm.printfile(fname, 0, 0)
 pwm.close(plot_idx)            	                                        // close the shape plot                        
@@ -410,17 +410,17 @@ for idx = 0, gains.size()-1 {
 	    
         printf("//		Printing output...\n")	
 
-	    sprint(fname,"output/dataset#12/%s_%s_%s_voltage.txt",prefix,gainasastring,seedasastring) 
+	    sprint(fname,"output/dataset#16/%s_%s_%s_voltage.txt",prefix,gainasastring,seedasastring) 
 	    outfile.wopen(fname)
         savevec.printf(outfile, "%g\n")
         outfile.close()
 	
-        sprint(fname,"output/dataset#12/%s_%s_%s_APs.txt",prefix,gainasastring,seedasastring)
+        sprint(fname,"output/dataset#16/%s_%s_%s_APs.txt",prefix,gainasastring,seedasastring)
         outfile.wopen(fname)	
         stvector.printf(outfile, "%g\n")
         outfile.close()		
 
-        sprint(fname,"output/dataset#12/%s_%s_%s_currents.txt",prefix,gainasastring,seedasastring)
+        sprint(fname,"output/dataset#16/%s_%s_%s_currents.txt",prefix,gainasastring,seedasastring)
         outfile.wopen(fname)
         for i = 0, vec_sodium.size()-1 {
 		    outfile.printf("%f\t", vec_sodium.x[i] )
@@ -432,7 +432,7 @@ for idx = 0, gains.size()-1 {
 	    outfile.close()
             
         if (switch_soma == 2) {
-            sprint(fname,"output/dataset#12/%s_%s_%s_%s_conductances.txt",prefix,myloc,gainasastring,seedasastring) 
+            sprint(fname,"output/dataset#16/%s_%s_%s_%s_conductances.txt",prefix,myloc,gainasastring,seedasastring) 
             outfile.wopen(fname)
             for i = 0, vec_cond_e.size()-1 {
                 outfile.printf("%f\t", vec_cond_e.x[i] )
