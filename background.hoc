@@ -22,7 +22,7 @@ create 		excells[dendsegments], incells[dendsegments] // dummy compartments
 Ne 				= 1870 // number of excitatory cortical cells/spines
 fe 				= 0.45 // frequency within the excitatory population (Hz)
 Ni 				= 460  // number of inhibitory cortical cells/spines
-fi 				= 0.07 // frequency within the inhibitory population (Hz)
+fi 				= 0.09 // frequency within the inhibitory population (Hz)
 i 				= 0
 	
 forsec cell.dends for(x, 0) {
