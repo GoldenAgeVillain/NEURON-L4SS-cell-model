@@ -4,9 +4,3 @@ start /B nrniv -c "perm=6" -c "scen=1" main.hoc
 start /B nrniv -c "perm=7" -c "scen=1" main.hoc
 start /B nrniv -c "perm=8" -c "scen=1" main.hoc
 start /B nrniv -c "perm=9" -c "scen=1" main.hoc
-start /B nrniv -c "perm=10" -c "scen=1" main.hoc
-start /B nrniv -c "perm=11" -c "scen=1" main.hoc
-start /B nrniv -c "perm=1" -c "scen=1" main.hoc
-start /B nrniv -c "perm=2" -c "scen=1" main.hoc
-start /B nrniv -c "perm=3" -c "scen=1" main.hoc
-start /B nrniv -c "perm=4" -c "scen=1" main.hoc

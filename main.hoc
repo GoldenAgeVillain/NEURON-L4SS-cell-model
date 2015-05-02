@@ -172,7 +172,7 @@ proc init_active() {
 }
 init_active()
 cell.soma distance()                                                // set cell.soma(0) as the origin for distance measurements
-		
+    
 // record voltage at the soma
 objref savevec
 savevec			= new Vector()
