@@ -5,7 +5,7 @@
 //
 //	Downloaded from ModelDB:	2014.07.22
 // 	Modified by: 				Renaud Jolivet
-// 	Last modification:			2015.03.31
+// 	Last modification:			2015.05.06
 // 				
 
 // initial definitions
@@ -31,8 +31,8 @@ if ( scenario == 1 ) {              // complete simulation scaling all thalamoco
     switch_scaling  = 1
     ge              = 0.0008 // µS
     gi              = 0.0005 // µS
-    gtc             = 0.0008 // µS
-    gms             = 0.0008 // µS
+    gtc             = 0.0010 // µS
+    gms             = 0.0010 // µS
     prefix          = "std"
 }
 if ( scenario == 2 ) {              // complete simulation scaling only the input of interest    
@@ -40,8 +40,8 @@ if ( scenario == 2 ) {              // complete simulation scaling only the inpu
     switch_scaling  = 0
     ge              = 0.0008 // µS
     gi              = 0.0005 // µS
-    gtc             = 0.0008 // µS
-    gms             = 0.0008 // µS
+    gtc             = 0.0010 // µS
+    gms             = 0.0010 // µS
     prefix          = "unscaled"
 }
 if ( scenario == 3 ) {              // simulation without inhibition scaling all thalamocortical inputs
@@ -49,8 +49,8 @@ if ( scenario == 3 ) {              // simulation without inhibition scaling all
     switch_scaling  = 1
     ge              = 0.0008 // µS
     gi              = 0      // µS
-    gtc             = 0.0008 // µS
-    gms             = 0.0008 // µS
+    gtc             = 0.0010 // µS
+    gms             = 0.0010 // µS
     prefix          = "woinh"
 }
 if ( scenario == 4 ) {              // one effective synapse at the soma
@@ -58,8 +58,8 @@ if ( scenario == 4 ) {              // one effective synapse at the soma
     switch_scaling  = 1
     ge              = 0.0008 // µS
     gi              = 0      // µS
-    gtc             = 0.0008 // µS
-    gms             = 0.0008 // µS
+    gtc             = 0.0010 // µS
+    gms             = 0.0010 // µS
     prefix          = "unique"
 }
 
