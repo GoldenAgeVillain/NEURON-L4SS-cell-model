@@ -5,7 +5,7 @@
 //
 //	Downloaded from ModelDB:	2014.07.22
 // 	Modified by: 				Renaud Jolivet
-// 	Last modification:			2015.05.06
+// 	Last modification:			2015.05.08
 // 				
 
 // initial definitions
@@ -29,10 +29,10 @@ if (name_declared("scen")==5) {     // defines the default scenario
 if ( scenario == 1 ) {              // complete simulation scaling all thalamocortical inputs
     switch_soma     = 0
     switch_scaling  = 1
-    ge              = 0.0008 // µS
-    gi              = 0.0005 // µS
-    gtc             = 0.0010 // µS
-    gms             = 0.0010 // µS
+    ge              = 0//0.0008 // µS
+    gi              = 0//0.0005 // µS
+    gtc             = 0//0.0010 // µS
+    gms             = 0//0.0010 // µS
     prefix          = "std"
 }
 if ( scenario == 2 ) {              // complete simulation scaling only the input of interest    
@@ -91,7 +91,7 @@ vinit			= -70
 dt				= 0.025 
 steps_per_ms 	= 10
 tstart 			= 0
-tstop 			= 130000
+tstop 			= 5000//130000
 
 // load cell morphology
 load_file("l4sscell.hoc")
@@ -118,25 +118,25 @@ objref cell
 cell 			= new l4(0,0)
  
 // thalamocortical contacts
-myloc_pos.append(0.5,0.2,0.9)		                                // dataset position #1 
-//myloc_pos.append(0.9,0.15,0.1)		                                // dataset position #2
+//myloc_pos.append(0.5,0.2,0.9)		                                // dataset position #1 
+myloc_pos.append(0.9,0.15,0.1)		                                // dataset position #2
 ntc             = myloc_pos.size()      
 
 // dataset positions #1
-access cell.a3_122                                                  // 2. Dendrites where to place the thalamocortical synapse
-myloc_name.append()
-access cell.a3_121                                         
-myloc_name.append()
-access cell.a3_12                                         
-myloc_name.append()
+//access cell.a3_122                                                  // 2. Dendrites where to place the thalamocortical synapse
+//myloc_name.append()
+//access cell.a3_121                                         
+//myloc_name.append()
+//access cell.a3_12                                         
+//myloc_name.append()
 
-// dataset positions #2
-//access cell.a5_1111                                                 // 2. Dendrites where to place the thalamocortical synapse
-//myloc_name.append()
-//access cell.a5_11111                                       
-//myloc_name.append()
-//access cell.a5_11111                                         
-//myloc_name.append()
+// positions #2
+access cell.a5_1111                                                 // 2. Dendrites where to place the thalamocortical synapse
+myloc_name.append()
+access cell.a5_11111                                       
+myloc_name.append()
+access cell.a5_11111                                         
+myloc_name.append()
     
 // procedures to set segments and distribute channels
 proc geom_nseg() {
@@ -176,7 +176,7 @@ cell.soma distance()                                                // set cell.
 // record voltage at the soma
 objref savevec
 savevec			= new Vector()
-savevec.record(&cell.soma.v(.5))
+savevec.record(&cell.soma.v(.5))    
 	
 // procedure to read currents
 objref vec_sodium, vec_calcium, vec_ex, vec_tc, vec_ms
@@ -230,6 +230,14 @@ inputSpikeTrain = new Vector()
 inputFile.ropen("input/inputSpikeTrain.txt")
 inputSpikeTrain.scanf(inputFile)
 inputFile.close()
+    
+// iClamp
+//access cell.soma
+//objref stimobj
+//stimobj = new IClamp(0.5)
+//stimobj.del = 500   // ms
+//stimobj.dur = 1000  // ms
+//stimobj.amp = 0.1   // nA
 		
 // create the extra input
 create      myTRC									                    // Thalamic Relay Cell (dummy compartment)
@@ -294,7 +302,7 @@ forsec myloc_name {
 plot_idx = 3    
 if (switch_plot == 0) {plot_idx = 1}      
 pwm.paper_place(plot_idx,0,0,2)                                         // transfer the shape plot to the paper icon 
-sprint(fname,"output/dataset#17/shape.eps") 
+sprint(fname,"output/dataset#19/shape.eps") 
 shape.observe(cell.dends)   
 pwm.printfile(fname, 0, 0)
 pwm.close(plot_idx)            	                                        // close the shape plot                        
@@ -370,7 +378,7 @@ proc advance() {
         }    
     }
 }	
-	
+	    
 // run simulations
 for idx = 0, gains.size()-1 {
 	
@@ -410,17 +418,17 @@ for idx = 0, gains.size()-1 {
 	    
         printf("//		Printing output...\n")	
 
-	    sprint(fname,"output/dataset#17/%s_%s_%s_voltage.txt",prefix,gainasastring,seedasastring) 
+	    sprint(fname,"output/dataset#19/%s_%s_%s_voltage.txt",prefix,gainasastring,seedasastring) 
 	    outfile.wopen(fname)
         savevec.printf(outfile, "%g\n")
         outfile.close()
 	
-        sprint(fname,"output/dataset#17/%s_%s_%s_APs.txt",prefix,gainasastring,seedasastring)
+        sprint(fname,"output/dataset#19/%s_%s_%s_APs.txt",prefix,gainasastring,seedasastring)
         outfile.wopen(fname)	
         stvector.printf(outfile, "%g\n")
         outfile.close()		
 
-        sprint(fname,"output/dataset#17/%s_%s_%s_currents.txt",prefix,gainasastring,seedasastring)
+        sprint(fname,"output/dataset#19/%s_%s_%s_currents.txt",prefix,gainasastring,seedasastring)
         outfile.wopen(fname)
         for i = 0, vec_sodium.size()-1 {
 		    outfile.printf("%f\t", vec_sodium.x[i] )
@@ -432,7 +440,7 @@ for idx = 0, gains.size()-1 {
 	    outfile.close()
             
         if (switch_soma == 2) {
-            sprint(fname,"output/dataset#17/%s_%s_%s_%s_conductances.txt",prefix,myloc,gainasastring,seedasastring) 
+            sprint(fname,"output/dataset#19/%s_%s_%s_%s_conductances.txt",prefix,myloc,gainasastring,seedasastring) 
             outfile.wopen(fname)
             for i = 0, vec_cond_e.size()-1 {
                 outfile.printf("%f\t", vec_cond_e.x[i] )

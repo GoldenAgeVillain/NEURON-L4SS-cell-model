@@ -5,7 +5,7 @@
 //
 //	Courtesy of Arnd Roth 
 // 	Modified by: 				Renaud Jolivet
-// 	Last modification:			2014.12.15
+// 	Last modification:			2015.05.07
 // 		 
 
 //
@@ -49,7 +49,8 @@ forsec cell.dends for(x, 0) {
 
 	tcnetcon[i]             = new NetCon(tcnetstim[i], tcsyn[i], 0.5, 0, gtc)
 
-    //printf("%-2.2f\t%-2.6f\n",distance(x),1000/tcnetstim[i].interval) // to plot effective frequency vs distance to soma
+    //printf("%s\t",secname()) 
+    //printf("%-2.6f\t%-2.6f\t%-2.6f\t%-2.6f\n",distance(x),diam(x),area(x),1000/tcnetstim[i].interval) // to plot effective frequency vs distance to soma
         
 	i += 1
         

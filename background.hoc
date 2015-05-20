@@ -5,7 +5,7 @@
 //
 //	Courtesy of Arnd Roth 
 // 	Modified by: 				Renaud Jolivet
-// 	Last modification:			2015.05.06
+// 	Last modification:			2015.05.07
 // 		 
 
 dendarea 		= 0
@@ -57,7 +57,8 @@ forsec cell.dends for(x, 0) {
 
 	innetcon[i]             = new NetCon(innetstim[i], insyn[i], 0.5, 0, gi)
 
-    //printf("%-2.2f\t%-2.6f\n",distance(x),1000/exnetstim[i].interval) // to plot effective frequency vs distance to soma
+    //printf("%s\t",secname()) 
+    //printf("%-2.6f\t%-2.6f\n",distance(x),1000/innetstim[i].interval) // to plot effective frequency vs distance to soma
 
 	i += 1
 }
