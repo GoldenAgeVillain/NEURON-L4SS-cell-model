@@ -2074,9 +2074,9 @@ proc init(){
 	m5()
 	access soma
 	distance()
-	forall{
+	forall {
 	    dends.append()
-		if (distance(0)>10) {all.append()}
+        if (distance(0)>10) {all.append()}
 		for i = 0, n3d()-1 {
 			pt3dchange(i,x3d(i)+$1,y3d(i)+$2,z3d(i),diam3d(i))	
 		}
