@@ -5,7 +5,7 @@
 //
 //	Courtesy of Arnd Roth 
 // 	Modified by: 				Renaud Jolivet
-// 	Last modification:			2015.05.07
+// 	Last modification:			2015.05.21
 // 		 
 
 dendarea 		= 0
@@ -19,10 +19,10 @@ objectvar 	innetstim[dendsegments], insyn[dendsegments], innetcon[dendsegments]
 create 		excells[dendsegments], incells[dendsegments] // dummy compartments
 
 // parameters
-Ne 				= 1870 // number of excitatory cortical cells/spines
-fe 				= 0.45 // frequency within the excitatory population (Hz)
-Ni 				= 460  // number of inhibitory cortical cells/spines
-fi 				= 0.09 // frequency within the inhibitory population (Hz)
+Ne 				= 1870 // number of excitatory cortical synapses
+fe 				= 0.33 // frequency within the excitatory population (Hz)
+Ni 				= 460  // number of inhibitory cortical synapses
+fi 				= 0.067// frequency within the inhibitory population (Hz)
 i 				= 0
 	
 forsec cell.dends for(x, 0) {

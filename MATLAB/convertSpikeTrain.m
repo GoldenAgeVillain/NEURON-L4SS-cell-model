@@ -20,7 +20,7 @@ while i<length(stim)
 end
 
 % save the spike train
-fid = fopen('inputSpikeTrain.txt','w');
+fid = fopen('../input/inputSpikeTrain.txt','w');
 for i = 1:1:length(spikeTrain)
     fprintf(fid,'%9.2f\n',spikeTrain(i));
 end
